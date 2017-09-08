@@ -1,27 +1,24 @@
 # pylint: disable-msg=C0103
 
-from io import StringIO
+import io
 import zipfile
 import boto3
 from botocore.client import Config
 
 s3 = boto3.resource('s3', config=Config(signature_version='s3v4'))
 
-portfolio_bucket = s3.Bucket('portfolio.toddghetrick.info')
-build_bucket = s3.Bucket('buildit.toddghetrick.info')
+PORTFOLIO_BUCKET = 'portfolio.toddghetrick.info'
+BUILD_BUCKET = 'buildit.toddghetrick.info'
 
-portfolio_zip = StringIO()
-build_bucket.download_fileobj('portfoliobuild/artifacts.zip', portfolio_zip)
+myportfolio = s3.Bucket(PORTFOLIO_BUCKET)
+mybuild = s3.Bucket(BUILD_BUCKET)
 
-with zipfile.ZipFile(portfolio_zip) as myzip:
+ms = io.BytesIO()
+mybuild.download_fileobj('portfoliobuild/artifacts.zip', ms)
+
+with zipfile.ZipFile(ms) as myzip:
     for nm in myzip.namelist():
         print (nm)
-with zipfile.ZipFile(portfolio_zip) as myzip:
-    for nm in myzip.namelist():
         obj = myzip.open(nm)
-        portfolio_bucket.upload_fileobj(obj, nm)
-with zipfile.ZipFile(portfolio_zip) as myzip:
-    for nm in myzip.namelist():
-        obj = myzip.open(nm)
-        portfolio_bucket.upload_fileobj(obj, nm)
-        portfolio_bucket.Object(nm).Acl().put(ACL='public-read')
+        myportfolio.upload_fileobj(obj, nm)
+        myportfolio.Object(nm).Acl().put(ACL='public-read')
