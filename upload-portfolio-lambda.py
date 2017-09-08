@@ -4,6 +4,7 @@ import io
 import zipfile
 import boto3
 from botocore.client import Config
+import mimetypes
 
 s3 = boto3.resource('s3', config=Config(signature_version='s3v4'))
 
@@ -20,5 +21,5 @@ with zipfile.ZipFile(ms) as myzip:
     for nm in myzip.namelist():
         print (nm)
         obj = myzip.open(nm)
-        myportfolio.upload_fileobj(obj, nm)
+        myportfolio.upload_fileobj(obj, nm, ExtraArgs={'ContentType': mimetypes.guess_type(nm)[0]})
         myportfolio.Object(nm).Acl().put(ACL='public-read')
